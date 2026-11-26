@@ -1,0 +1,38 @@
+{
+  "name": "node-red-contrib-codesys",
+  "version": "0.3.0",
+  "description": "A Node-RED node to read data from CoDeSys V2.3 PLCs (read-only)",
+  "optionalDependencies": {
+    "@protocols/codesys-v2": "0.2.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "hardware",
+    "codesys",
+    "elau",
+    "pacdrive",
+    "plcwinnt",
+    "plc",
+    "node-red"
+  ],
+  "node-red": {
+    "nodes": {
+      "codesys": "red/codesys.js"
+    }
+  },
+  "author": "ST-One Ltda.",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/st-one-io/node-red-contrib-codesys.git"
+  },
+  "bugs": {
+    "url": "https://github.com/st-one-io/node-red-contrib-codesys/issues"
+  },
+  "homepage": "https://github.com/st-one-io/node-red-contrib-codesys#readme",
+  "bundledDependencies": [
+    "@protocols/codesys-v2"
+  ]
+}

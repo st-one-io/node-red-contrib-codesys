@@ -1,0 +1,818 @@
+<!--
+  Copyright: (c) 2026, ST-One Ltda.
+  Node-RED nodes for CoDeSys V2.3 PLCs (read-only).
+-->
+
+<script type="text/x-red" data-template-name="codesys endpoint">
+    <div class="form-row">
+		<ul style="background: #fff; min-width: 600px; margin-bottom: 20px;" id="node-config-codesys-endpoint-tabs"></ul>
+	</div>
+	<div id="node-config-codesys-endpoint-tabs-content" style="min-height: 170px;">
+		<div id="codesys-endpoint-tab-connection" style="display:none">
+			<div class="form-row">
+				<label for="node-config-input-address"><i class="fa fa-globe"></i> <span data-i18n="codesys.endpoint.label.address"></span></label>
+				<input class="input-append-left" type="text" id="node-config-input-address" data-i18n="[placeholder]codesys.endpoint.placeholder.address" style="width: 40%;">
+				<label for="node-config-input-port" style="margin-left: 10px; width: auto; "> <span data-i18n="codesys.endpoint.label.port"></span></label>
+				<input type="text" id="node-config-input-port" data-i18n="[placeholder]codesys.endpoint.label.port" style="width: 60px;">
+			</div>
+			<div class="form-row">
+				<label for="node-config-input-byteOrder"><i class="fa fa-exchange"></i> <span data-i18n="codesys.endpoint.label.byteorder"></span></label>
+				<select type="text" id="node-config-input-byteOrder">
+					<option value="little" data-i18n="codesys.endpoint.byteorder.little"></option>
+					<option value="big" data-i18n="codesys.endpoint.byteorder.big"></option>
+				</select>
+			</div>
+			<div class="form-row">
+				<label for="node-config-input-cycletime"><i class="fa fa-refresh"></i> <span data-i18n="codesys.endpoint.label.cycletime"></span></label>
+				<input type="text" id="node-config-input-cycletime" data-i18n="[placeholder]codesys.endpoint.label.cycletime" style="width: 60px;"> <span>ms</span>
+			</div>
+			<div class="form-row">
+				<label for="node-config-input-timeout"><i class="fa fa-clock-o"></i> <span data-i18n="codesys.endpoint.label.timeout"></span></label>
+				<input type="text" id="node-config-input-timeout" data-i18n="[placeholder]codesys.endpoint.label.timeout" style="width: 60px;"> <span>ms</span>
+			</div>
+			<div class="form-row">
+				<label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="codesys.label.name"></span></label>
+				<input type="text" id="node-config-input-name" data-i18n="[placeholder]codesys.label.name">
+			</div>
+		</div>
+		<div id="codesys-endpoint-tab-variables" style="display:none">
+			<div class="form-row" style="margin-bottom:0;">
+				<label><i class="fa fa-list"></i> <span data-i18n="codesys.endpoint.label.variables.list"></span></label>
+			</div>
+			<div class="form-row node-input-variables-container-row" style="margin-bottom: 0px;">
+				<div id="node-config-input-variables-container-div" style="box-sizing: border-box; border-radius: 5px; height: 300px; padding: 5px; border: 1px solid #ccc; overflow-y:scroll;">
+					<ol id="node-config-input-variables-container" style=" list-style-type:none; margin: 0;"></ol>
+				</div>
+			</div>
+			<div class="form-row">
+				<a href="#" class="editor-button editor-button-small" id="node-config-codesys-endpoint-var-export" style="margin: 4px; float: right"><i class="fa fa-download"></i> <span data-i18n="codesys.endpoint.label.variables.export"></span></a>
+				<input type="file" id="node-config-codesys-endpoint-var-import" accept=".csv,.txt" style="display: none"/>
+				<a href="#" class="editor-button editor-button-small" id="node-config-codesys-endpoint-var-import-btn" style="margin: 4px; float: right"><i class="fa fa-upload"></i> <span data-i18n="codesys.endpoint.label.variables.import"></span></a>
+				<a href="#" class="editor-button editor-button-small" id="node-config-input-add-variable" style="margin: 4px;"><i class="fa fa-plus"></i> <span data-i18n="codesys.endpoint.label.variables.add"></span></a>
+				<a href="#" class="editor-button editor-button-small" id="node-config-codesys-endpoint-var-clean" style="margin: 4px;"><i class="fa fa-trash-o"></i> <span data-i18n="codesys.endpoint.label.variables.clean"></span></a>
+			</div>
+		</div>
+	</div>
+</script>
+
+<script type="text/x-red" data-help-name="codesys endpoint">
+	<p>Configures the connection to a PLC running a CoDeSys V2.3 runtime (e.g. PLCWinNT, ELAU PacDrive)</p>
+	<p>This node was created as part of the <a href="https://st-one.io" target="_blank">ST-One</a> project</p>
+
+	<p class="form-tips">
+		<b>Read-only:</b> the underlying library only allows the handshake, login, read list
+		and logout services. Writing, start/stop and download are blocked.
+	</p>
+
+	<h3>Details</h3>
+	<p>
+		The <b>Cycle time</b> configuration specifies the time interval in which
+		all variables will be read from the PLC. A value of <code>0</code> disables
+		automatic reading, and then a manual triggering is required from the
+		<i>codesys control</i> node
+	</p>
+	<p>
+		The <b>Timeout</b> parameter sets the maximum amount of time that the PLC
+		may take to answer our requests. It may be desirable to raise this time if
+		the network is busy or its latency is high
+	</p>
+	<p>
+		The <b>Port</b> is usually <code>1200</code> for PLCWinNT and <code>5000</code>
+		for ELAU PacDrive controllers. The <b>Byte order</b> must match the target:
+		<i>Little-endian</i> for Intel based targets (PLCWinNT) and <i>Big-endian</i>
+		for Motorola based targets (ELAU PacDrive)
+	</p>
+	<p>
+		When the connection is lost, a new attempt is made every 5 seconds
+	</p>
+
+	<h3>Variables</h3>
+	<p>
+		Each variable has an <b>Address</b> and a <b>Name</b>. The name is used to select the
+		variable on the <i>codesys in</i> node and as <code>msg.topic</code>
+	</p>
+	<p>
+		The variable list can be exported to and imported from a CSV file, one variable per
+		line, in the format <code>address;name</code> (a tab can also be used as separator)
+	</p>
+
+	<h3>Variable addressing</h3>
+	<style>
+		table {
+		padding: 0; }
+		table tr {
+			border-top: 1px solid #cccccc;
+			background-color: white;
+			margin: 0;
+			padding: 0; }
+			table tr:nth-child(2n) {
+			background-color: #f8f8f8; }
+			table tr th {
+			font-weight: bold;
+			border: 1px solid #cccccc;
+			text-align: left;
+			margin: 0;
+			padding: 6px 13px; }
+			table tr td {
+			border: 1px solid #cccccc;
+			text-align: left;
+			margin: 0;
+			padding: 6px 13px; }
+			table tr th :first-child, table tr td :first-child {
+			margin-top: 0; }
+			table tr th :last-child, table tr td :last-child {
+			margin-bottom: 0; }
+	</style>
+	<table>
+		<thead>
+			<tr>
+				<th>Address</th>
+				<th>JS Data type</th>
+				<th>Description</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td><code>%MX1.9</code></td>
+				<td>Boolean</td>
+				<td>Bit 9 of word 1 of the memory area (bits 0-15)</td>
+			</tr>
+			<tr>
+				<td><code>%MB5</code></td>
+				<td>Number</td>
+				<td>Byte 5 (0-255) of the memory area</td>
+			</tr>
+			<tr>
+				<td><code>%MW38</code></td>
+				<td>Number</td>
+				<td>Unsigned 16-bit number (WORD) at word 38 of the memory area</td>
+			</tr>
+			<tr>
+				<td><code>%MW38:INT</code></td>
+				<td>Number</td>
+				<td>Signed 16-bit number at word 38 of the memory area</td>
+			</tr>
+			<tr>
+				<td><code>%MD10</code></td>
+				<td>Number</td>
+				<td>Unsigned 32-bit number (DWORD) at double word 10 of the memory area</td>
+			</tr>
+			<tr>
+				<td><code>%MD10:DINT</code></td>
+				<td>Number</td>
+				<td>Signed 32-bit number at double word 10 of the memory area</td>
+			</tr>
+			<tr>
+				<td><code>%MD10:REAL</code></td>
+				<td>Number</td>
+				<td>Floating point 32-bit number at double word 10 of the memory area</td>
+			</tr>
+			<tr>
+				<td><code>%MD10:TIME</code></td>
+				<td>Number</td>
+				<td>TIME value, in milliseconds</td>
+			</tr>
+			<tr>
+				<td><code>RAW:4:162:4:DINT</code></td>
+				<td>Number</td>
+				<td>Signed 32-bit number at byte offset 162 of area 4 (POU data)</td>
+			</tr>
+			<tr>
+				<td><code>RAW:0:6272:4:UDINT</code></td>
+				<td>Number</td>
+				<td>Unsigned 32-bit number at byte offset 6272 of area 0 (same as <code>%MD1568:UDINT</code>)</td>
+			</tr>
+			<tr>
+				<td><code>RAW:4:166:21:STRING</code></td>
+				<td>String</td>
+				<td>21 bytes at byte offset 166 of area 4, as a zero-terminated string</td>
+			</tr>
+			<tr>
+				<td><code>%MW40:STRING(20)</code></td>
+				<td>String</td>
+				<td>STRING(20) starting at word 40 (reads 21 bytes)</td>
+			</tr>
+			<tr>
+				<td><code>RAW:4:200:8</code></td>
+				<td>String</td>
+				<td>8 raw bytes at byte offset 200 of area 4, as a hex string</td>
+			</tr>
+		</tbody>
+	</table>
+	<p>
+		The <code>%</code> is optional (<code>MW38</code> also works). Supported data types:
+		<code>BOOL</code>, <code>BYTE</code>, <code>SINT</code>, <code>USINT</code>,
+		<code>WORD</code>, <code>INT</code>, <code>UINT</code>, <code>DWORD</code>,
+		<code>DINT</code>, <code>UDINT</code>, <code>REAL</code>, <code>TIME</code>,
+		<code>STRING</code>, <code>STRING(n)</code>
+	</p>
+	<p>
+		Area <code>0</code> is the memory area (<code>%M</code>). Variables declared without
+		<code>AT</code> live in area <code>4</code>, at an offset defined by the compiler
+	</p>
+	<p>
+		The PLC may report a variable as invalid (e.g. an address outside the area); in that
+		case its value is <code>null</code>
+	</p>
+</script>
+
+<script type="text/javascript">
+	/*! @source http://purl.eligrey.com/github/FileSaver.js/blob/master/FileSaver.js */
+	var saveAs = saveAs || function (e) { "use strict"; if (typeof e === "undefined" || typeof navigator !== "undefined" && /MSIE [1-9]\./.test(navigator.userAgent)) { return } var t = e.document, n = function () { return e.URL || e.webkitURL || e }, r = t.createElementNS("http://www.w3.org/1999/xhtml", "a"), o = "download" in r, a = function (e) { var t = new MouseEvent("click"); e.dispatchEvent(t) }, i = /constructor/i.test(e.HTMLElement) || e.safari, f = /CriOS\/[\d]+/.test(navigator.userAgent), u = function (t) { (e.setImmediate || e.setTimeout)(function () { throw t }, 0) }, s = "application/octet-stream", d = 1e3 * 40, c = function (e) { var t = function () { if (typeof e === "string") { n().revokeObjectURL(e) } else { e.remove() } }; setTimeout(t, d) }, l = function (e, t, n) { t = [].concat(t); var r = t.length; while (r--) { var o = e["on" + t[r]]; if (typeof o === "function") { try { o.call(e, n || e) } catch (a) { u(a) } } } }, p = function (e) { if (/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(e.type)) { return new Blob([String.fromCharCode(65279), e], { type: e.type }) } return e }, v = function (t, u, d) { if (!d) { t = p(t) } var v = this, w = t.type, m = w === s, y, h = function () { l(v, "writestart progress write writeend".split(" ")) }, S = function () { if ((f || m && i) && e.FileReader) { var r = new FileReader; r.onloadend = function () { var t = f ? r.result : r.result.replace(/^data:[^;]*;/, "data:attachment/file;"); var n = e.open(t, "_blank"); if (!n) e.location.href = t; t = undefined; v.readyState = v.DONE; h() }; r.readAsDataURL(t); v.readyState = v.INIT; return } if (!y) { y = n().createObjectURL(t) } if (m) { e.location.href = y } else { var o = e.open(y, "_blank"); if (!o) { e.location.href = y } } v.readyState = v.DONE; h(); c(y) }; v.readyState = v.INIT; if (o) { y = n().createObjectURL(t); setTimeout(function () { r.href = y; r.download = u; a(r); h(); c(y); v.readyState = v.DONE }); return } S() }, w = v.prototype, m = function (e, t, n) { return new v(e, t || e.name || "download", n) }; if (typeof navigator !== "undefined" && navigator.msSaveOrOpenBlob) { return function (e, t, n) { t = t || e.name || "download"; if (!n) { e = p(e) } return navigator.msSaveOrOpenBlob(e, t) } } w.abort = function () { }; w.readyState = w.INIT = 0; w.WRITING = 1; w.DONE = 2; w.error = w.onwritestart = w.onprogress = w.onwrite = w.onabort = w.onerror = w.onwriteend = null; return m }(typeof self !== "undefined" && self || typeof window !== "undefined" && window || this.content); if (typeof module !== "undefined" && module.exports) { module.exports.saveAs = saveAs } else if (typeof define !== "undefined" && define !== null && define.amd !== null) { define("FileSaver.js", function () { return saveAs }) }
+</script>
+
+<script type="text/javascript">
+
+	var CODESYS_DATATYPES = ["BOOL", "BYTE", "SINT", "USINT", "WORD", "INT", "UINT", "DWORD", "DINT", "UDINT", "REAL", "TIME", "STRING", "BYTES"];
+
+	/**
+	 * Validates a variable address, returning null if valid or the error code.
+	 * Accepted formats: %MXw.b, %MBn, %MWn, %MDn (the "%" is optional) and
+	 * RAW:area:offset:size, all followed by an optional ":TYPE"
+	 */
+	function validateCodesysAddress(address) {
+
+		if (!address || !address.trim()) return 'ERR_PARSE_EMPTY';
+
+		var parts = address.trim().toUpperCase().split(':');
+		var dataType;
+
+		if (parts[0] === 'RAW') {
+			if (parts.length < 4 || parts.length > 5) return 'ERR_PARSE_RAW';
+			for (var i = 1; i < 4; i++) {
+				if (!/^\d+$/.test(parts[i])) return 'ERR_PARSE_RAW';
+			}
+			dataType = parts[4];
+		} else {
+			if (parts.length > 2) return 'ERR_PARSE_UNKNOWN_FORMAT';
+
+			var match = parts[0].match(/^%?M([XBWD])(\d+)(?:\.(\d+))?$/);
+			if (!match) return 'ERR_PARSE_UNKNOWN_FORMAT';
+
+			if (match[1] === 'X') {
+				// bits are addressed inside a word: %MXw.b, with b = 0..15
+				if (match[3] === undefined || parseInt(match[3]) > 15) return 'ERR_PARSE_BIT_OFFSET';
+			} else if (match[3] !== undefined) {
+				return 'ERR_PARSE_INVALID_BIT_OFFSET';
+			}
+			dataType = parts[1];
+		}
+
+		if (dataType === undefined) return null;
+
+		if (/^STRING\(/.test(dataType)) {
+			var strMatch = dataType.match(/^STRING\((\d+)\)$/);
+			if (!strMatch || parseInt(strMatch[1]) < 1) return 'ERR_PARSE_STRING_LEN';
+			return null;
+		}
+
+		if (CODESYS_DATATYPES.indexOf(dataType) < 0) return 'ERR_PARSE_DATATYPE';
+
+		return null;
+	}
+
+	function validateAddressList(list) {
+		for (var i = 0; i < list.length; i++){
+			var elm = list[i];
+			if (!elm.name) return false;
+			if (validateCodesysAddress(elm.addr)) return false;
+		}
+		return true;
+	}
+
+	RED.nodes.registerType('codesys endpoint', {
+		category: 'config',
+		defaults: {
+			address: {
+				value: "",
+				required: true
+			},
+			port: {
+				value: "1200",
+				validate: RED.validators.number()
+			},
+			byteOrder: {
+				value: "little"
+			},
+			cycletime: {
+				value: 1000
+			},
+			timeout: {
+				value: 3000
+			},
+			name: {
+				value: ""
+			},
+			vartable: {
+				value: [{
+					name: "",
+					addr: ""
+				}],
+				validate: validateAddressList
+			}
+		},
+		label: function () {
+			return this.name || (this.address + ":" + this.port);
+		},
+		oneditprepare: function () {
+			var self = this;
+			var tt = this._.bind(this);
+			var labelName = this._("codesys.endpoint.label.variables.name");
+			var labelAddr = this._("codesys.endpoint.label.variables.addr");
+			var labelDel = this._("codesys.endpoint.label.variables.del");
+
+			// Prepare tabs
+			var tabs = RED.tabs.create({
+				id: "node-config-codesys-endpoint-tabs",
+				onchange: function (tab) {
+					$("#node-config-codesys-endpoint-tabs-content").children().hide();
+					$("#" + tab.id).show();
+				}
+			});
+			tabs.addTab({
+				id: "codesys-endpoint-tab-connection",
+				label: this._("codesys.endpoint.label.tabs.connection")
+			});
+			tabs.addTab({
+				id: "codesys-endpoint-tab-variables",
+				label: this._("codesys.endpoint.label.tabs.variables")
+			});
+			setTimeout(function () {
+				tabs.resize()
+			}, 0);
+
+			function generateVariable(variable) {
+				var curTooltip;
+				var previousValue = variable.addr;
+				var container = $('<li/>', {
+					style: "background: #fff; margin:0; padding:8px 0px; border-bottom: 1px solid #ccc;"
+				});
+				var row1 = $('<div/>').appendTo(container);
+
+				var variableAddr = $('<input/>', {
+					style: "width: 170px; margin-right: 10px;",
+					class: "node-config-input-variable-addr",
+					type: "text",
+					placeholder: labelAddr
+				}).appendTo(row1);
+
+				var variableName = $('<input/>', {
+					style: "width: 250px",
+					class: "node-config-input-variable-name",
+					type: "text",
+					placeholder: labelName
+				}).appendTo(row1);
+
+				var finalspan = $('<span/>', {
+					style: "float: right; margin-right: 10px;"
+				}).appendTo(row1);
+				var deleteButton = $('<a/>', {
+					href: "#",
+					class: "editor-button editor-button-small",
+					style: "margin-top: 7px; margin-left: 5px;",
+					title: labelDel
+				}).appendTo(finalspan);
+
+				$('<i/>', {
+					class: "fa fa-remove"
+				}).appendTo(deleteButton);
+
+				deleteButton.click(function () {
+					container.css({
+						"background": "#fee"
+					});
+					container.fadeOut(150, function () {
+						$(this).remove();
+					});
+					if (curTooltip) curTooltip.close();
+				});
+
+				variableAddr.change(function () {
+					//validate address
+					var curVal = variableAddr.val();
+					var valError = validateCodesysAddress(curVal);
+					if (valError) {
+						variableAddr.addClass('input-error')
+						var errorText = tt("codesys.validation." + valError);
+						if (curTooltip) {
+							curTooltip.setContent(errorText);
+							curTooltip.open();
+						} else if (RED.popover && RED.popover.tooltip){
+							curTooltip = RED.popover.tooltip(variableAddr, errorText);
+							curTooltip.open();
+						}
+					} else {
+						variableAddr.removeClass('input-error');
+						if(curTooltip) {
+							curTooltip.close();
+							curTooltip.setContent('');
+							//hack to remove the popup, as Node-RED don't offer
+							// and "unbind" function. May break in the future
+							variableAddr.off('mouseenter mouseleave disabled');
+							curTooltip = null;
+						}
+					}
+
+					//update name if matching old one
+					if (previousValue && variableName.val() == previousValue) {
+						variableName.val(curVal);
+					}
+					previousValue = curVal;
+				});
+
+				//populate data
+				variableAddr.val(variable.addr);
+				variableName.val(variable.name);
+				variableAddr.change();
+
+				$("#node-config-input-variables-container").append(container);
+			}
+
+			function cleanVarTable() {
+				$("#node-config-input-variables-container").children().remove();
+			}
+
+			function populateVarTable() {
+				if (self.vartable) {
+					if (typeof self.vartable == 'string') {
+						self.vartable = JSON.parse(self.vartable);
+					}
+					for (var i = 0; i < self.vartable.length; i++) {
+						generateVariable(self.vartable[i]);
+					}
+				}
+			}
+
+			$("#node-config-input-add-variable").click(function () {
+				generateVariable({
+					name: "",
+					addr: ""
+				});
+			});
+
+			$("#node-config-input-cycletime").spinner({
+				min: 0
+			});
+
+			$("#node-config-input-timeout").spinner({
+				min: 500
+			});
+
+			$("#node-config-codesys-endpoint-var-clean").click(cleanVarTable);
+
+			populateVarTable();
+
+			// export
+			function exportCSV() {
+				var vars = $("#node-config-input-variables-container").children();
+				var lines = [];
+
+				vars.each(function (i) {
+					var elm = $(this);
+					lines.push([
+						elm.find(".node-config-input-variable-addr").val(), //addr
+						elm.find(".node-config-input-variable-name").val() //name
+					].join(';'));
+				});
+
+				saveAs(new Blob([lines.join('\r\n')]), 'codesysendpoint' + (self.name ? '_' + self.name : '') + '.csv');
+			}
+			$('#node-config-codesys-endpoint-var-export').click(exportCSV);
+
+			// import
+			function importCSV(e) {
+				var file = e.target.files[0];
+				if (!file) {
+					return;
+				}
+				var reader = new FileReader();
+				reader.onload = function (e) {
+					var res = [], i, fields;
+					var contents = e.target.result || '';
+					var lines = contents.split(/[\r\n]+/);
+
+					if (!contents.trim()) {
+						alert(tt("codesys.error.importempty"));
+						return;
+					}
+
+					for (i = 0; i < lines.length; i++) {
+
+						lines[i] = lines[i].trim();
+						if (lines[i] == '') continue;
+
+						fields = lines[i].split(/[\t;]/);
+
+						if (fields.length < 2) {
+							alert(tt("codesys.error.importline"));
+							return;
+						}
+						res.push({
+							addr: fields[0].trim(),
+							name: fields[1].trim()
+						});
+					}
+
+					if (res.length) {
+						cleanVarTable();
+						self.vartable = res;
+						populateVarTable();
+					}
+				};
+				reader.readAsText(file);
+				// allows importing the same file again
+				e.target.value = '';
+			}
+			$('#node-config-codesys-endpoint-var-import').on('change', importCSV);
+			$('#node-config-codesys-endpoint-var-import-btn').click(function () {
+				$('#node-config-codesys-endpoint-var-import').click();
+			});
+		},
+		oneditsave: function () {
+			var node = this;
+			var vars = $("#node-config-input-variables-container").children();
+			node.vartable = [];
+
+			vars.each(function (i) {
+				var elm = $(this);
+				var addr = elm.find(".node-config-input-variable-addr").val();
+				var name = elm.find(".node-config-input-variable-name").val();
+				var v = {
+					addr: addr,
+					name: name || addr
+				}
+				node.vartable.push(v);
+			});
+		}
+	});
+</script>
+
+<!-- ######################################################################################## -->
+
+<script type="text/x-red" data-template-name="codesys in">
+	<div class="form-row">
+		<label for="node-input-endpoint"><i class="fa fa-bolt"></i> <span data-i18n="codesys.in.label.endpoint"></span></label>
+		<input type="text" id="node-input-endpoint" data-i18n="[placeholder]codesys.in.label.endpoint">
+	</div>
+	<div class="form-row">
+		<label for="node-input-mode"><i class="fa fa-sliders"></i> <span data-i18n="codesys.in.label.mode"></span></label>
+		<select type="text" id="node-input-mode">
+			<option value="single" data-i18n="codesys.in.mode.single"></option>
+			<option value="all-split" data-i18n="codesys.in.mode.all-split"></option>
+			<option value="all" data-i18n="codesys.in.mode.all"></option>
+		</select>
+	</div>
+	<div class="form-row codesys-input-var-row">
+		<label for="node-input-variable"><i class="fa fa-random"></i> <span data-i18n="codesys.in.label.variable"></span></label>
+		<select type="text" id="node-input-variable">
+		</select>
+    <span id="codesys-custom-var-addr"></span>
+	</div>
+	<div class="form-row">
+		<label>&nbsp;</label>
+		<input type="checkbox" id="node-input-diff" style="display: inline-block; width: auto; vertical-align: top;">
+		<label for="node-input-diff" style="width:70%;"><span data-i18n="codesys.in.label.diff"></span></label>
+	</div>
+	<div class="form-row">
+		<label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="codesys.label.name"></span></label>
+		<input type="text" id="node-input-name" data-i18n="[placeholder]codesys.label.name">
+	</div>
+</script>
+
+<script type="text/x-red" data-help-name="codesys in">
+	<p>Reads data from a CoDeSys V2.3 PLC</p>
+	<p>This node was created as part of the <a href="https://st-one.io" target="_blank">ST-One</a> project</p>
+
+	<h3>Outputs</h3>
+	<dl class="message-properties">
+		<dt>payload<span class="property-type">any</span></dt>
+		<dd>
+			The value(s) as read from the PLC. The format and type of the payload
+			depends on the configured "Mode". Variables reported as invalid by the
+			PLC have the value <code>null</code>
+		</dd>
+
+		<dt>topic<span class="property-type">string</span></dt>
+		<dd>
+			The name of the variable, when the message refers to a single variable
+			(that is, when mode is "Single Variable" or "All variables, one per
+			message")
+		</dd>
+	</dl>
+
+	<h3>Details</h3>
+	<p>
+		All data is read cyclically from the PLC as configured in the <i>codesys endpoint</i>,
+		but there are three modes of making it available in a flow:
+	</p>
+	<ul>
+		<li>
+			<b>Single variable:</b> A single variable can be selected from the configured
+			variables, and a message is sent every cycle, or only when it changes if
+			<i>diff</i> is checked. <code>msg.payload</code> contains the variable's value
+			and <code>msg.topic</code> has the variable's name.
+		</li>
+		<li>
+			<b>All variables, one per message:</b> Like the <i>Single variable</i> mode,
+			but for all variables configured. If <i>diff</i> is checked, a message is sent
+			everytime any variable changes. If <i>diff</i> is unchecked, one message is sent
+			for every variable, in every cycle. Care must be taken about the number of
+			messages per second in this mode.
+		</li>
+		<li>
+			<b>All variables:</b> In this mode, <code>msg.payload</code> contains an object
+			with all configured variables and their values. If <i>diff</i> is checked, a
+			message is sent if at least one of the variables changes its value.
+		</li>
+	</ul>
+</script>
+
+<script type="text/javascript">
+	RED.nodes.registerType('codesys in', {
+		category: 'plc',
+		defaults: {
+			endpoint: {
+				value: "",
+				type: "codesys endpoint",
+				required: true
+			},
+			mode: {
+				value: "single"
+			},
+			variable: {
+				value: ""
+			},
+			diff: {
+				value: true
+			},
+			name: {
+				value: ""
+			}
+		},
+		color: "#9EC2E6",
+		inputs: 0,
+		outputs: 1,
+		icon: "serial.png",
+		label: function () {
+			var self = this;
+
+			if (this.name) return this.name;
+
+			var endpointNode = RED.nodes.node(this.endpoint);
+			if (endpointNode) {
+				return (this.mode == 'single' ? this.variable : null) || endpointNode.label();
+			}
+			return this._("codesys.in.label.name");
+		},
+		labelStyle: function () {
+			return this.name ? "node_label_italic" : "";
+		},
+		oneditprepare: function () {
+			var self = this;
+
+			var varList = $('#node-input-variable');
+			var varAddr = $('#codesys-custom-var-addr');
+			var modeList = $('#node-input-mode');
+			var endpointList = $("#node-input-endpoint");
+			var vars = [];
+
+			function updateVarList(endpointId) {
+				$('#node-input-variable option').remove();
+
+				var endpointNode = RED.nodes.node(endpointId);
+				if (!endpointNode) return;
+				vars = endpointNode.vartable || [];
+				if (typeof vars === 'string') vars = JSON.parse(vars);
+
+				varList.append($('<option/>', {
+					disabled: "disabled",
+					selected: "selected",
+					style: "display:none;",
+					text: vars.length ? self._("codesys.in.label.variable-select") : self._("codesys.in.label.variable-novar")
+				}));
+
+				$.each(vars, function (i, val) {
+					varList.append($('<option/>', {
+						value: val.name || val.addr,
+						text: val.name || val.addr
+					}));
+					if (val.name == self.variable) {
+						varList.val(self.variable);
+					}
+				});
+			}
+
+			varList.change(function () {
+				$.each(vars, function (i, val) {
+					if (varList.val() == val.name) {
+						varAddr[0].innerText = val.addr;
+						return true;
+					}
+				});
+			});
+
+			endpointList.change(function () {
+				updateVarList(endpointList.val());
+			});
+			updateVarList(self.endpoint);
+
+			modeList.change(function () {
+				if (modeList.val() == "single") {
+					varList.parent().show();
+				} else {
+					varList.parent().hide();
+				}
+			});
+			modeList.change();
+		}
+	});
+</script>
+
+<!-- ######################################################################################## -->
+
+<script type="text/x-red" data-template-name="codesys control">
+	<div class="form-row">
+		<label for="node-input-endpoint"><i class="fa fa-bolt"></i> <span data-i18n="codesys.control.label.endpoint"></span></label>
+		<input type="text" id="node-input-endpoint" data-i18n="[placeholder]codesys.control.label.endpoint">
+	</div>
+	<div class="form-row">
+		<label for="node-input-function"><i class="fa fa-sliders"></i> <span data-i18n="codesys.control.label.function"></span></label>
+		<select type="text" id="node-input-function">
+			<option value=""></option>
+			<option value="cycletime" data-i18n="codesys.control.function.cycletime"></option>
+			<option value="trigger" data-i18n="codesys.control.function.trigger"></option>
+		</select>
+	</div>
+	<div class="form-row">
+		<label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="codesys.label.name"></span></label>
+		<input type="text" id="node-input-name" data-i18n="[placeholder]codesys.label.name">
+	</div>
+</script>
+
+<script type="text/x-red" data-help-name="codesys control">
+	<p>Enables advanced control of the connection to a CoDeSys V2.3 PLC</p>
+	<p>This node was created as part of the <a href="https://st-one.io" target="_blank">ST-One</a> project</p>
+
+	<h3>Details</h3>
+	<p>The behavior of this node is changed according to the selected function. If no function
+		is selected, it is taken from <code>msg.function</code>
+	</p>
+	<dl class="message-properties">
+		<dt>Cycle Time</dt>
+		<dd>
+			Changes the time interval between each cyclic read
+			of variables. It expects a message with <code>payload</code> with a
+			positive number, being the time in milliseconds between each read. A
+			value of zero disables the cyclic read.
+		</dd>
+
+		<dt>Trigger read</dt>
+		<dd>
+			Manually triggers a read cycle. No message parameters are used and the
+			same message is sent on the output. Useful when longer cycle times are
+			used, but an instant feedback is needed. Note that the <i>codesys in</i>
+			nodes are still required to read the values of the variables.
+		</dd>
+	</dl>
+</script>
+
+<script type="text/javascript">
+	RED.nodes.registerType('codesys control', {
+		category: 'plc',
+		defaults: {
+			endpoint: {
+				value: "",
+				type: "codesys endpoint",
+				required: true
+			},
+			function: {
+				value: "cycletime"
+			},
+			name: {
+				value: ""
+			}
+		},
+		color: "#9EC2E6",
+		inputs: 1,
+		outputs: 1,
+		icon: "serial.png",
+		label: function () {
+			var self = this;
+
+			if (this.name) return this.name;
+
+			var endpointNode = RED.nodes.node(this.endpoint);
+			if (endpointNode) {
+				if (this.function) {
+					return endpointNode.label() + ": " + this._("codesys.control.function." + this.function);
+				} else {
+					return endpointNode.label()
+				}
+			}
+			return this._("codesys.control.label.name");
+		},
+		labelStyle: function () {
+			return this.name ? "node_label_italic" : "";
+		}
+	});
+</script>
